@@ -26,5 +26,22 @@ public class CameraUtils {
                 == PackageManager.PERMISSION_GRANTED;
     }
 
+    public static File getOutputMediaFile() {
+        File mediadir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"PhotoTask");
+        if(!mediadir.exists()) {
+            if(!mediadir.mkdirs()) {
+                Log.e("RRRRRR","Error creating dirs!");
+                return null;
+            }
+        }
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss",Locale.getDefault()).format(new Date());
+        File mf;
+        mf = new File(mediadir.getPath() + "/" + "Image_"+timestamp +".jpg");
+        return mf;
+    }
+
+    public static Uri getOutputMediaUri(Context c, File f) {
+        return FileProvider.getUriForFile(c,c.getPackageName()+".provider",f);
+    }
 
 }
