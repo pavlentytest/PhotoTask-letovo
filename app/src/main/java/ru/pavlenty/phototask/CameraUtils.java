@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
@@ -18,6 +19,18 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 
 public class CameraUtils {
+
+    public static void refreshGallery(Context context, String filePath) {
+        MediaScannerConnection.scanFile(context,
+                new String[]{ filePath },
+                null,
+                new MediaScannerConnection.OnScanCompletedListener() {
+                    @Override
+                    public void onScanCompleted(String s, Uri uri) {
+
+                    }
+                });
+    }
 
     public static boolean checkPermissions(Context c) {
         return ActivityCompat.checkSelfPermission(c, Manifest.permission.CAMERA )
