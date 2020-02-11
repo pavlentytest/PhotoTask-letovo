@@ -15,6 +15,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -24,6 +25,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -58,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     private String imageSavePath;
     private Bitmap bitmap;
     private Uri fileuri;
+    private ProgressBar pb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
         btn_send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // uploadFile();
+                 uploadFile();
             }
         });
     }
@@ -145,6 +149,49 @@ public class MainActivity extends AppCompatActivity {
         bitmap = BitmapFactory.decodeFile(imageSavePath);
         imageView.setImageBitmap(bitmap);
 
+    }
+
+    private void uploadFile() {
+        // создаем переменную типа File
+        File file = new File(imageSavePath);
+
+        RequestBody requestFile =
+                RequestBody.create(MediaType.parse(getContentResolver().getType(fileuri)),file);
+        RequestBody descBody =
+                RequestBody.create(MediaType.parse("text/plain"),"desc file");
+
+        Gson gson = new GsonBuilder().create();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(MyAPI.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build();
+
+        MyAPI api = retrofit.create(MyAPI.class);
+        Call<MyResponse> call = api.uploadImage(requestFile,descBody);
+
+        LinearLayout lr = findViewById(R.id.root);
+        pb = new ProgressBar(MainActivity.this,null,android.R.attr.progressBarStyleLarge) ;
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(100,100);
+
+        lr.addView(pb,params);
+        pb.setVisibility(View.VISIBLE);
+
+        call.enqueue(new Callback<MyResponse>() {
+            @Override
+            public void onResponse(Call<MyResponse> call, Response<MyResponse> response) {
+                pb.setVisibility(View.GONE);
+                if(!response.body().error) {
+                    Toast.makeText(getApplicationContext(),"File upload success!",Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getApplicationContext(),response.body().message,Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<MyResponse> call, Throwable t) {
+                Toast.makeText(getApplicationContext(),t.getMessage(),Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
 
